@@ -1,0 +1,12 @@
+name: Context-Words
+title: Context-Words
+username:
+account: semantica
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 360589
+bundleId: 1702477
+url: https://semantica.shinyapps.io/Context-Words/
+when: 1542291702.88915
+asMultiple: FALSE
+asStatic: FALSE

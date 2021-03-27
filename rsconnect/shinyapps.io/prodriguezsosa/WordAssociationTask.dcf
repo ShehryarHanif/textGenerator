@@ -1,0 +1,12 @@
+name: WordAssociationTask
+title: WordAssociationTask
+username:
+account: prodriguezsosa
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 357700
+bundleId: 1419245
+url: https://prodriguezsosa.shinyapps.io/WordAssociationTask/
+when: 1528474067.01012
+asMultiple: FALSE
+asStatic: FALSE
