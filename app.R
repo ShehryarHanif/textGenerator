@@ -8,6 +8,7 @@ library(shiny.semantic)
 library(purrr)
 library(magrittr)
 library(data.table)
+library(rsconnect)
 
 # --------------------------
 # load data and functions
@@ -23,12 +24,15 @@ time <- 3
 compensation <- "3.00"
 min_words <- 10
 
+
 # --------------------------
-# data saving
+# Data saving
 # --------------------------
-outputDir <- "GitHub/large_data/shinySFT/output"   # directory to save data
-droptoken <- readRDS("----INSERT AUTH TOKEN HERE----")   # reads in authentication for dropbox (must be store in same folder as this code)
-# check out https://github.com/karthik/rdrop2 to see how to generate your auth tokens and link to your dropbox
+
+outputDir <- "turingTest/textStuff"  # Directory to save data
+droptoken <- readRDS("token.rds") # Reads in authentication for Dropbox (must be stored in same folder as this code)
+
+# Check out https://github.com/karthik/rdrop2 to see how to generate your authentication tokens and link to your dropbox
 
 # --------------------------
 # java scripts
@@ -173,7 +177,7 @@ server <- function(input, output, session) {
           # action button to be pressed by user to continue
           actionButton(inputId = "consent",   # button ID
                        label = "Start",   # button label (text displayed to the user)
-                       class = "btn btn-primary")   # css class (defines button color as specified in the css file)
+                       class = "btn btn-primary action-button")   # css class (defines button color as specified in the css file)
           )
         )
       )}
@@ -211,7 +215,7 @@ server <- function(input, output, session) {
           # action button to be pressed by user to continue
           actionButton(inputId = "goto.instructions2",   # button ID 
                        label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary"),   # css class (defines button color as specified in the css file)
+                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
           br()
         )
       )}
@@ -233,7 +237,7 @@ server <- function(input, output, session) {
           # action button to be pressed by user to continue
           actionButton(inputId = "goto.screening1",   # button ID 
                        label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary"),   # css class (defines button color as specified in the css file)
+                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
           br()
         )
       )}
@@ -275,7 +279,7 @@ server <- function(input, output, session) {
           # action button to be pressed by user to continue
           actionButton(inputId = "goto.screening2",   # button ID 
                        label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary"),   # css class (defines button color as specified in the css file)
+                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
           br(),
           br()
         )
@@ -320,7 +324,7 @@ server <- function(input, output, session) {
             p("Click ''Next'' to continue"),
             actionButton(inputId = "goto.instructions3",   # button ID 
                          label = "Next",   # button label (text displayed to the user) 
-                         class = "btn btn-primary"),   # css class (defines button color as specified in the css file)
+                         class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
             br(),
             br()
           )
@@ -365,7 +369,7 @@ server <- function(input, output, session) {
           # action button to be pressed by user to continue
           actionButton(inputId = "goto.instructions4",   # button ID 
                        label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary"),   # css class (defines button color as specified in the css file)
+                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
           br()
         )
       )}
@@ -400,7 +404,7 @@ server <- function(input, output, session) {
           # action button to be pressed by user to continue
           actionButton(inputId = "goto.training.fluency1",   # button ID 
                        label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary"),   # css class (defines button color as specified in the css file)
+                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
           br()
         )
      )}
@@ -437,11 +441,11 @@ server <- function(input, output, session) {
           
           actionButton(inputId = "goto.task.fluency1",
                        label = "Continue",
-                       class = "btn btn-primary"),
+                       class = "btn btn-primary action-button"),
           HTML("<br><br>"),  # spacing using HTML
           actionButton(inputId = "goto.instructions3",
                        label = "Back to instructions",
-                       class = "btn btn-primary"))
+                       class = "btn btn-primary action-button"))
       )}
     
     # --------------------------------
@@ -526,8 +530,7 @@ server <- function(input, output, session) {
         br(),
         
         textAreaInput("comments",
-                      label = "If you have any additional comments (e.g. that can help us improve the task), please enter them below.",
-                      resize = "both"),
+                      label = "If you have any additional comments (e.g. that can help us improve the task), please enter them below."),
         
         br(),
         
@@ -535,7 +538,7 @@ server <- function(input, output, session) {
         
         actionButton(inputId = "savedata",
                      label = "Next", 
-                     class = "btn btn-primary"),
+                     class = "btn btn-primary action-button"),
         
         HTML("<br><br><br>"))
       )
@@ -558,7 +561,7 @@ server <- function(input, output, session) {
           
           actionButton(inputId = "goto.goodbye",
                        label = "Save my data",
-                       class = "btn btn-primary"))
+                       class = "btn btn-primary action-button"))
       )}
 
     # --------------------------------
@@ -596,7 +599,7 @@ server <- function(input, output, session) {
           p("Press ''Next'' to continue to the next cue."),
           actionButton(inputId = "nexttask",
                        label = "Next",
-                       class = "btn btn-primary")
+                       class = "btn btn-primary action-button")
         ))
     }
     

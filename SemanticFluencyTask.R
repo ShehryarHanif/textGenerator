@@ -42,6 +42,6 @@ SemanticFluencyTask <- function(title = NULL, cue = NULL, InputID = NULL, nextIn
     # action button to be pressed by user to continue
     actionButton(inputId = nextInputID,   # button ID 
                  label = "Next",   # button label (text displayed to the user) 
-                 class = "btn btn-primary")
+                 class = "btn btn-primary action-button")
   ))
 }
