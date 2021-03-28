@@ -1,6 +1,7 @@
 # --------------------------
-# load libraries
+# Load libraries
 # --------------------------
+
 library(shiny)
 library(rdrop2)
 library(dplyr)
@@ -11,19 +12,20 @@ library(data.table)
 library(rsconnect)
 
 # --------------------------
-# load data and functions
+# Load data and functions
 # --------------------------
+
 task_data <- readRDS("data/task_data.rds")
 training_data <- readRDS("data/training_data.rds")
 screening_data <- readRDS("data/screening_data.rds")
 source("SemanticFluencyTask.R", local = TRUE)
 
-# set timer precision
+# Set timer precision
+
 options(digits.secs = 6)
 time <- 3
 compensation <- "3.00"
 min_words <- 10
-
 
 # --------------------------
 # Data saving
@@ -35,12 +37,14 @@ droptoken <- readRDS("token.rds") # Reads in authentication for Dropbox (must be
 # Check out https://github.com/karthik/rdrop2 to see how to generate your authentication tokens and link to your dropbox
 
 # --------------------------
-# java scripts
+# Java scripts
 # --------------------------
-# js to register when keyboard is used
-# Shiny.onInputChange only reacts when the js object it references changes
-# to solve this we add a random number generator
-# see: https://stackoverflow.com/questions/35831811/register-repeated-keyboard-presses-in-shiny
+
+# Java script to register when keyboard is used
+
+# "Shiny.onInputChange" only reacts when the Java script object it references changes
+# To solve an error, we add a random number generator (https://stackoverflow.com/questions/35831811/register-repeated-keyboard-presses-in-shiny)
+
 keyboard <- ' $(document).on("keydown", function (e) {
 Shiny.onInputChange("lastkeypresscode", [e.which, Math.random()]); 
 });
@@ -51,12 +55,13 @@ Shiny.onInputChange("lastkeypresscode", [e.which, Math.random()]);
 # USER INTERFACE
 #
 # --------------------------------
+
 ui <- fluidPage(
-  theme = "cosmo.css",   # css theme dowloaded from bootswatch.com (https://bootswatch.com/3/)
-  tags$script(keyboard),     # load java scripts
-  title = "Semantica",       # define title
-  uiOutput("MainAction"),    # render function for dynamic ui
-  tags$style(type = "text/css", ".recalculating {opacity: 1.0;}")   # prevents gray screen during Sys.sleep()
+  theme = "cosmo.css", # CSS theme downloaded from bootswatch.com (https://bootswatch.com/3/)
+  tags$script(keyboard), # Load java scripts
+  title = "Semantica", # Define title
+  uiOutput("MainAction"), # Render function for dynamic ui
+  tags$style(type = "text/css", ".recalculating {opacity: 1.0;}") # Prevents gray screen during "Sys.sleep()"
 )
 
 # --------------------------------
@@ -64,139 +69,183 @@ ui <- fluidPage(
 # SERVER FUNCTION
 #
 # --------------------------------
+
 server <- function(input, output, session) {
   
   # ----------------------------
-  # navigation - training cues
+  # Navigation - Training cues
   # ----------------------------
-  training.cues <- sample(training_data) # randomize training cues
+  
+  training.cues <- sample(training_data) # Randomize training cues
+  
   num_training <- length(training.cues)
-  # InputID (from)
-  num_training <- length(training.cues) # register number of cues
+  
+  # "Input ID" ("From")
+  
+  num_training <- length(training.cues) # Register number of cues
   navigator_training <- data.table("cue" = training.cues, "InputID" = c(paste0("training.fluency", seq(1:num_training))), "title" = c(paste0("Training ", seq(1:num_training), " of ", num_training)))                  
-  # NextInputID (to)
+  
+  # Next "Input ID" ("To")
+  
   if(num_training < 2){navigator_training$nextInputID <- "ready"}else{
     navigator_training$nextInputID <- c(paste0("nextcue", 1:(num_training - 1)), "ready")}
   
   # ----------------------------
-  # navigation - task cues
+  # Navigation - Task cues
   # ----------------------------
-  task.cues <- sample(task_data)   # randomize task cues
-  # InputID (from)
+  
+  task.cues <- sample(task_data)   # Randomize task cues
+  
+  # "Input ID" ("From")
+  
   num_tasks <- length(task.cues) # register number of cues
   navigator_task <- data.table("cue" = task.cues, "InputID" = c(paste0("task.fluency", seq(1:num_tasks))), "title" = c(paste0("Task ", seq(1:num_tasks), " of ", num_tasks)))                  
-  # NextInputID (to)
+ 
+   # Next "Input ID" ("To")
+  
   if(num_tasks < 2){navigator_task$nextInputID <- "savedata"}else{
     navigator_task$nextInputID <- c(paste0("nextcue", 1:(num_tasks - 1)), "survey")}
   
   # ----------------------------
-  # navigation - rbind
+  # Navigation - rbind
   # ----------------------------
+  
   navigator <- rbind(navigator_training, navigator_task)
   
   # ----------------------------
-  # screener tasks
+  # Screener tasks
   # ----------------------------
-  # screener 1
+  
+  # Screener 1
+  
   screener1 <- sample(names(screening_data[1:2]))
   screener1.left <- screening_data[[screener1[1]]]
   screener1.right <- screening_data[[screener1[2]]]
-  # screener 2
+  
+  # Screener 2
+  
   screener2 <- sample(names(screening_data[3:4]))
   screener2.left <- screening_data[[screener2[1]]]
   screener2.right <- screening_data[[screener2[2]]]
-  # randomly sample correct answer
+  
+  # Randomly sample correct answer
+  
   screener.cue1 <- sample(names(screening_data[1:2]), 1)
   screener.cue2 <- sample(names(screening_data[3:4]), 1)
-  # correct responses
+  
+  # Correct responses
+  
   screener1.correct <- data.frame("screener1.left" = ifelse(screener.cue1 == screener1[1], TRUE, FALSE), "screener1.right" = ifelse(screener.cue1 !=screener1[1], TRUE, FALSE), stringsAsFactors = FALSE)
   screener2.correct <- data.frame("screener2.left" = ifelse(screener.cue2 == screener2[1], TRUE, FALSE), "screener2.right" = ifelse(screener.cue2 !=screener2[1], TRUE, FALSE), stringsAsFactors = FALSE)
   
-  
   # --------------------------------
-  #   define reactive values
+  #   Define reactive values
   # --------------------------------
   
   # CurrentValues stores navigation related values
+  
   CurrentValues <- reactiveValues(page = "welcome",
                                   errors = "none",
                                   task_index = 1)
   
-  FluencyData <- reactiveValues()  # fluency task values
-  RTStartData <- reactiveValues()  # time of first key press (for each token entry)
-  RTEndData <- reactiveValues()    # time of last key press (for each token entry)
-  RTCurrentStartData <- reactiveValues()  # necessary to compute intra/inter retrieval times
-  EventTimeLog <- reactiveValues()  # stored current system time (necessary for timed tasks)
+  FluencyData <- reactiveValues() # Fluency task values
+  RTStartData <- reactiveValues() # Time of first key press (for each token entry)
+  RTEndData <- reactiveValues() # Time of last key press (for each token entry)
+  RTCurrentStartData <- reactiveValues() # Necessary to compute intra/inter retrieval times
+  EventTimeLog <- reactiveValues() # Store current system time (necessary for timed tasks)
 
   # --------------------------------
-  # send dynamic UI to ui
+  # Awns dynamic UI to UI
   # --------------------------------
+  
   output$MainAction <- renderUI( {
     PageLayouts()
   })
-  
 
   # --------------------------------
-  # define page layouts
+  # Define page layouts
   # --------------------------------
+  
   PageLayouts <- reactive({
     
     # --------------------------------
-    # welcome page
+    # welcone page
     # --------------------------------
-    if (CurrentValues$page == "welcome") {  # conditionl determining whether page is displayed
+    
+    if (CurrentValues$page == "welcome") {  # Conditional determining whether page is displayed
       
-      # conditional: if ID not entered, ouput inputLabel text in red to remind user that he must enter an ID
+      # Conditional: If ID not entered, otuput inputLabel text in red to remind user that they must enter an ID
+      
       if (CurrentValues$errors == "Blank_Name") {
         inputLabel <- p(style = "color:Red", "Please enter your MTurk ID!")   
       } else {
         inputLabel <- p("Please enter your MTurk ID")
       }
       
-      # page content
-      # can use HTML (e.g. HTML("<br><br>")) or RShiny HTML tags (e.g. br()) 
-      # see: https://shiny.rstudio.com/articles/tag-glossary.html
+      # Page content
+      
+      # Can use HTML (e.g., HTML("<br><br>")) or RShiny HTML tags (e.g., "br()")
+      
+      # See: https://shiny.rstudio.com/articles/tag-glossary.html
+      
       return(
         list(
           br(),
-          h1(span(strong("Context Words"), style="color:#2780e3")),   # title
+          
+          h1(span(strong("Context Words"), style="color:#2780e3")), # Title
+          
           br(),
-            mainPanel(    
-          p(span(strong("Purpose:"), style="color:#2780e3"),"collect context words."),
-          p(span(strong("Confidentiality:"), style="color:#2780e3"), "responses are anonymous, we have no way of linking the data to individual identities."),
-          p(span(strong("Length:"), style="color:#2780e3"), "task takes on average 15 to 20 minutes to complete."),
-          p(span(strong("Compensation:"), style="color:#2780e3"), paste0("$", compensation)),
-          br(),
-          p("If you consent to participate in this study, please enter your MTurk ID and press ''Start''.")),
-          # main panel contents
+          
+          mainPanel(    
+            p(span(strong("Purpose:"), style="color:#2780e3"),"collect context words."),
+            p(span(strong("Confidentiality:"), style="color:#2780e3"), "responses are anonymous, we have no way of linking the data to individual identities."),
+            p(span(strong("Length:"), style="color:#2780e3"), "task takes on average 15 to 20 minutes to complete."),
+            p(span(strong("Compensation:"), style="color:#2780e3"), paste0("$", compensation)),
+            br(),
+            p("If you consent to participate in this study, please enter your MTurk ID and press ''Start''.")),
+          
+          # Main panel contents
+          
           mainPanel(
-            # text input control
-          textInput(inputId = "workerid",   # control ID
-                    label = inputLabel,     # label to appear on top of control (color conditioned above)
-                    placeholder = "enter MTurk ID here"), # text to appear as placeholder inside control (an example of a unique ID)
-          # action button to be pressed by user to continue
-          actionButton(inputId = "consent",   # button ID
-                       label = "Start",   # button label (text displayed to the user)
-                       class = "btn btn-primary action-button")   # css class (defines button color as specified in the css file)
+            
+            # Text input control
+            
+            textInput(inputId = "workerid", # Control ID
+                      label = inputLabel, # Label to appear on top of control (color conditioned above)
+                      placeholder = "enter MTurk ID here"), # Text to appear as placeholder inside control (an example of a unique ID)
+            
+          # Action button to be pressed by user to continue
+          
+           actionButton(inputId = "consent", # Button ID
+                        label = "Start", # Button label (text displayed to the user)
+                        class = "btn btn-primary action-button") # CSS class (defines button color as specified in the CSS file)
           )
         )
       )}
     
     # --------------------------------
-    # instructions 1
+    # Instructions 1
     # --------------------------------
-    if (CurrentValues$page == "instructions1") {   # conditionl determining whether page is displayed
+    
+    if (CurrentValues$page == "instructions1") { # Conditional determining whether page is displayed
+      # Content
       
-      # content
       return(
         list(
           br(),
+          
           span(h2(strong("Context Words")), style="color:#2780e3"),
+          
           p("A famous maxim in the study of linguistics states that:"),
+          
           p(strong(em("You shall know a word by the company it keeps.")), "(Firth, 1957)"),
+          
           p("This task is designed to help us understand the nature of the ''company'' that words ''keep'': that is, their CONTEXT. "),
+          
           br(),
+          
           p("Specifically, for a CUE WORD, its CONTEXT WORDS include words that:"),
+          
           column(12,
                  wellPanel(
           tags$ul(
@@ -210,47 +259,60 @@ server <- function(input, output, session) {
             tags$li(em("cup"), "(tends to occur in the vicinity of COFFEE)."), 
             tags$li(em("tea"), "(tends to occur in similar situations to COFFEE, for example when discussing drinks).")
           ),
+          
           br(),
+          
           p("Click ''Next'' to continue"),
-          # action button to be pressed by user to continue
-          actionButton(inputId = "goto.instructions2",   # button ID 
-                       label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
+          
+          # Action button to be pressed by user to continue
+          
+          actionButton(inputId = "goto.instructions2",   # Button ID 
+                       label = "Next", # Button label (text displayed to the user) 
+                       class = "btn btn-primary action-button"),   # CSS class (defines button color as specified in the CSS file)
           br()
         )
       )}
     
     # --------------------------------
-    # instructions 2
+    # Instructions 2
     # --------------------------------
-    if (CurrentValues$page == "instructions2") {   # conditionl determining whether page is displayed
+    
+    if (CurrentValues$page == "instructions2") { # Conditional determining whether page is displayed
       return(
         list(
           br(),
+          
           span(h2(strong("Context Words")), style="color:#2780e3"),
+          
           br(),
+          
           p("To make sure you understand what context words are, in what follows you will be given a", strong("cue word"), "and two
             lists of", strong("context words"),". Please read both lists and select the list that best meets the above criteria for 
             the cue word provided.", strong("Keep in mind wrong answers in these screening tasks will end your participation in the task without remuneration.")),
+          
           br(),
+          
           p("Click ''Next'' to continue to task"),
-          # action button to be pressed by user to continue
-          actionButton(inputId = "goto.screening1",   # button ID 
-                       label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
+          
+          # Action button to be pressed by user to continue
+          
+          actionButton(inputId = "goto.screening1", # Button ID 
+                       label = "Next", # Button label (text displayed to the user) 
+                       class = "btn btn-primary action-button"), # CSS class (defines button color as specified in the CSS file)
           br()
         )
       )}
     
     # --------------------------------
-    # screening 1
+    # Screening 1
     # --------------------------------
-    if (CurrentValues$page == "screening1") {   # conditionl determining whether page is displayed
-
+    
+    if (CurrentValues$page == "screening1") { # Conditional determining whether page is displayed
       return(
         list(
           fluidPage(
           br(),
+          
           fluidRow(
             column(12,
                    h3(strong(toupper(screener.cue1))),
@@ -271,30 +333,40 @@ server <- function(input, output, session) {
                             offset = 2, align = "center"),
             align = "center")
           ),
+          
           br(),
+          
           p("Select the list with the best context words for the cue word provided by clicking on the respective checkbox below the list."),
+          
           br(),
+          
           br(),
+          
           p("Click ''Next'' to continue"),
-          # action button to be pressed by user to continue
-          actionButton(inputId = "goto.screening2",   # button ID 
-                       label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
+          
+          # Action button to be pressed by user to continue
+          
+          actionButton(inputId = "goto.screening2", # Button ID 
+                       label = "Next", # Button label (text displayed to the user) 
+                       class = "btn btn-primary action-button"), # CSS class (defines button color as specified in the CSS file)
+          
           br(),
+          
           br()
         )
         )
       )}
     
     # --------------------------------
-    # screening 2
+    # Screening 2
     # --------------------------------
-    if (CurrentValues$page == "screening2") {   # conditionl determining whether page is displayed
-
+    
+    if (CurrentValues$page == "screening2") { # Codnitional determining whether page is displayed
       return(
         list(
           fluidPage(
             br(),
+            
             fluidRow(
               column(12,
                      h3(strong(toupper(screener.cue2))),
@@ -316,37 +388,55 @@ server <- function(input, output, session) {
                             offset = 2, align = "center"),
                      align = "center")
             ),
+            
             br(),
+            
             p("Select the list with the best context words for the cue word provided by clicking on the respective checkbox below the list."),
-            # action button to be pressed by user to continue
+            
+            # Action button to be pressed by user to continue
+            
             br(),
+            
             br(),
+            
             p("Click ''Next'' to continue"),
-            actionButton(inputId = "goto.instructions3",   # button ID 
-                         label = "Next",   # button label (text displayed to the user) 
-                         class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
+            
+            actionButton(inputId = "goto.instructions3", # Button ID 
+                         label = "Next", # Button label (text displayed to the user) 
+                         class = "btn btn-primary action-button"), # CSS class (defines button color as specified in the CSS file)
+            
             br(),
+            
             br()
           )
         )
       )}
     
     # --------------------------------
-    # instructions 3
+    # Instructions 3
     # --------------------------------
+    
     if (CurrentValues$page == "instructions3") {
-      
       return(
         list(
           br(),
+          
           span(h2(strong("Task Description")), style="color:#2780e3"),
+          
           br(),
+          
           p("In what follows we want you to list ", strong("off the top of your head"), " context words for a series of cues."),
+          
           br(),
+          
           p(strong("We are especially interested in context words likely to appear in",  span("political discourse.", style="color: #ff0000"))),
+          
           br(),
+          
           p(paste0("For each iteration of the task (", num_tasks, " in total):")),
+          
           br(),
+          
           tags$ol(
             tags$li("You will be given a cue word."),
             br(),
@@ -364,56 +454,81 @@ server <- function(input, output, session) {
             br(),
             tags$li(strong("You must click ''Next'' before the clock runs out"), "otherwise you will not be allowed to continue with the HIT.")
           ),
+          
           br(),
+          
           p("Click ''Next'' to continue"),
-          # action button to be pressed by user to continue
-          actionButton(inputId = "goto.instructions4",   # button ID 
-                       label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
+          
+          # Action button to be pressed by user to continue
+          
+          actionButton(inputId = "goto.instructions4", # Button ID 
+                       label = "Next", # Button label (text displayed to the user) 
+                       class = "btn btn-primary action-button"), # CSS class (defines button color as specified in the CSS file)
+          
           br()
         )
       )}
     
     # --------------------------------
-    # instructions 4
+    # Instructions 4
     # --------------------------------
+    
     if (CurrentValues$page == "instructions4") {
-      
       return(
         list(
           br(),
+          
           span(h2(strong("Compensation")), style="color:#2780e3"),
+          
           br(),
+          
           p(paste0("To receive compensation ($", compensation ," in total) you must:")),
+          
           br(),
+          
           tags$ol(
             tags$li("Enter at least ", min_words, " unique context words for each of the cues (if you can think of more please enter them)."), 
             br(),
             tags$li("For each cue, complete the task within the 3 minutes provided.")),
+          
           br(),
+          
           p("Failure to satisfy any one of these requirements will automatically end your participation in this HIT."),
+          
           br(),
+          
           p("Remember:"),
+          
           br(),
+          
           tags$ol(
-          tags$li("After you input a word, press enter to have it saved."), 
+            
+          tags$li("After you input a word, press enter to have it saved."),
+          
           br(),
+          
           tags$li("Only click the ''Next'' button once you are done listing all context words for a given cue.")),
+          
           br(),
+          
           p("Click ''Next'' to start a training trial.", strong("Please note, failure to perform the task as indicated will automatically end your participation.")),
-          # action button to be pressed by user to continue
-          actionButton(inputId = "goto.training.fluency1",   # button ID 
-                       label = "Next",   # button label (text displayed to the user) 
-                       class = "btn btn-primary action-button"),   # css class (defines button color as specified in the css file)
+          
+          # Action button to be pressed by user to continue
+         
+          actionButton(inputId = "goto.training.fluency1", # Button ID 
+                       label = "Next", # Button label (text displayed to the user) 
+                       class = "btn btn-primary action-button"), # CSS class (defines button color as specified in the CSS file)
           br()
         )
      )}
     
     # --------------------------------
-    # fluency training tasks
+    # Fluency training tasks
     # --------------------------------
-    if (CurrentValues$page %in% navigator$InputID){   # conditionl determining whether page is a fluency task training page
-      CurrentValues$task_index <- which(navigator$InputID == CurrentValues$page)  # keep record of training trials performed
+    
+    if (CurrentValues$page %in% navigator$InputID){ # Conditional determining whether page is a fluency task training page
+      CurrentValues$task_index <- which(navigator$InputID == CurrentValues$page) # Keep record of training trials performed
+      
       return(
         SemanticFluencyTask(title = navigator$title[CurrentValues$task_index],  
                             cue = navigator$cue[CurrentValues$task_index], 
@@ -425,36 +540,45 @@ server <- function(input, output, session) {
       )}
     
     # --------------------------------
-    # fluency tasks
+    # Fluency tasks
     # --------------------------------
+    
     if (CurrentValues$page == "ready") {
-      
       return(
         list(
           br(),
+          
           span(h2(strong("Ready to Start?")), style="color:#2780e3"),
+          
           br(),
+          
           p("Thank you for completing the trial run, if you feel ready to begin the real tasks, click ''Continue''. The first cue will immediately appear on the screen."),
+        
           br(),
+          
           p("If you want to return to the instructions click on ''Back to instructions''."), 
+          
           br(),
           
           actionButton(inputId = "goto.task.fluency1",
                        label = "Continue",
                        class = "btn btn-primary action-button"),
+          
           HTML("<br><br>"),  # spacing using HTML
+          
           actionButton(inputId = "goto.instructions3",
                        label = "Back to instructions",
                        class = "btn btn-primary action-button"))
       )}
     
     # --------------------------------
-    # survey
+    # Survey
     # --------------------------------
     
     if (CurrentValues$page == "survey") {
       
       # Throw an error if not all question have been answered.
+      
       if (CurrentValues$errors == "answerQuestions") {
         answerQuestions <- p(style = "color:Red", "Please answer all required questions!")
       } else {
@@ -545,18 +669,25 @@ server <- function(input, output, session) {
     }
     
     # --------------------------------
-    # save data
+    # Save data
     # --------------------------------
+    
     if (CurrentValues$page == "savedata") {
       
       return(
         list(
           br(),
+          
           span(h2(strong("Save Data")), style="color:#2780e3"),
+          
           br(),
+          
           p("You have completed all the required tasks. To save your data and get your HIT completion code press ''Save my data''."),
+          
           br(),
+          
           p("If for some reason you do not want to have your data saved, simply close this window (NOTE: you will not receive compensation)."), 
+          
           br(),
           
           actionButton(inputId = "goto.goodbye",
@@ -565,38 +696,54 @@ server <- function(input, output, session) {
       )}
 
     # --------------------------------
-    # goodbye
+    # Goodbye
     # --------------------------------
-    if (CurrentValues$page == "goodbye") {
-      
+    
+    if (CurrentValues$page == "goodbye"){
       # CALCULATE COMPLETION CODE for MTurk
+      
       completion.code <- paste0("CW-", sample(100:999, size = 1), "-", sample(100:999, size = 1), "-", sample(100:999, size = 1))
       
       return(list(
         br(),
+        
         h3("Thank you for your participation!"),
+        
         br(),
+        
         p("Here is your randomly generated study completion code. Please enter this code to submit your HIT."),
+        
         h3(completion.code),
+        
         br(),
+        
         h3("What was this survey about?"),
+        
         br(),
+        
         p("This survey is part of an academic study exploring context words."),
+        
         br(),
+        
         p("You may proceed to close this window.")
       ))
     }
     
     # --------------------------------
-    # next cue wait time
+    # Next cue wait time
     # --------------------------------
+    
     if (CurrentValues$page == "nextcue") {
       return(
         list(
           br(),
+          
           span(h3(strong("Ready for the next cue?")), style="color:#2780e3"),
+          
           br(),
+          
           p("Press ''Next'' to continue to the next cue."),
+          
           actionButton(inputId = "nexttask",
                        label = "Next",
                        class = "btn btn-primary action-button")
@@ -604,55 +751,72 @@ server <- function(input, output, session) {
     }
     
     # --------------------------------
-    # performance check 1
+    # Performance check 1
     # --------------------------------
+    
     if (CurrentValues$page == "booted1") {
-      
       return(list(
         br(),
+        
         h3("SORRY!"),
+        
         br(),
+        
         p("The list you selected is incorrect. This ends your participation in this task."),
+        
         br(),
+        
         p("You may proceed to close this window.")
       ))
     }
     
     # --------------------------------
-    # performance check 2
+    # Performance check 2
     # --------------------------------
+    
     if (CurrentValues$page == "booted2") {
-      
       return(list(
         br(),
+        
         h3("SORRY!"),
+        
         br(),
+        
         p("You failed to provide at least 5 unique context words as required. This ends your participation in this task."),
+        
         br(),
+        
         p("You may proceed to close this window.")
       ))
     }
     
     # --------------------------------
-    # performance check 3
+    # Performance check 3
     # --------------------------------
-    if (CurrentValues$page == "booted3") {
-      
+    
+    if (CurrentValues$page == "booted3"){
       return(list(
         br(),
+        
         h3("SORRY!"),
+        
         br(),
+        
         p("You have run out of time. This ends your participation in this task."),
+        
         br(),
+        
         p("You may proceed to close this window.")
       ))
     }
   })
   
   # --------------------------------
-  # page navigation
+  # Page navigation
   # --------------------------------
-  # consent page
+  
+  # Consent page
+  
   observeEvent(input$consent, {
     if (input$workerid == ""){
       CurrentValues$errors <- "Blank_Name"
@@ -661,7 +825,8 @@ server <- function(input, output, session) {
     }
   })
   
-  # screener 1
+  # Screener 1
+  
   observeEvent(input$goto.screening2, {
     if (input$screener1.left == screener1.correct$screener1.left & input$screener1.right == screener1.correct$screener1.right) {
       CurrentValues$page <- "screening2"
@@ -670,7 +835,8 @@ server <- function(input, output, session) {
     }
   })
   
-  # screener 2
+  # Screener 2
+  
   observeEvent(input$goto.instructions3, {
     if (input$screener2.left == screener2.correct$screener2.left & input$screener2.right == screener2.correct$screener2.right) {
       CurrentValues$page <- "instructions3"
@@ -679,7 +845,8 @@ server <- function(input, output, session) {
     }
   })
   
-  # fluency task pages
+  # Fluency task pages
+  
   observeEvent(input[[navigator$nextInputID[CurrentValues$task_index]]], {
     if (Sys.time() > EventTimeLog[[CurrentValues$page]]){
       CurrentValues$page <- "booted3"
@@ -691,16 +858,19 @@ server <- function(input, output, session) {
       }
     }})
   
-  # survey
+  # Survey
+  
   observeEvent(input$savedata, {
-    # check wether all questions have been answered:
+    # Check whether all questions have been answered
+    
     if (any(input$age == 0, is.null(input$sex), is.null(input$party), is.null(input$ideology), is.null(input$fair), is.null(input$interesting))) {
       CurrentValues$errors <- "answerQuestions"
     } else {
       CurrentValues$page <- "savedata"
     }})
   
-  # other
+  # Other
+  
   observeEvent(input$goto.instructions1, CurrentValues$page <- "instructions1")
   observeEvent(input$goto.instructions2, CurrentValues$page <- "instructions2")
   observeEvent(input$goto.instructions4, CurrentValues$page <- "instructions4")
@@ -709,16 +879,19 @@ server <- function(input, output, session) {
   observeEvent(input$goto.task.fluency1, CurrentValues$page <- "task.fluency1")
   observeEvent(input$nexttask, CurrentValues$page <- navigator$InputID[(CurrentValues$task_index + 1)])
    
-  # data save
+  # Data-save
+  
   observeEvent(input$goto.goodbye, {
       
       # Create progress message
+    
       withProgress(message = "Saving data...",
                    value = 0, {
                      
                      incProgress(.25)
                      
-                     # function to order fluency data
+                     # Function to order fluency data
+                     
                      order_data <- function(cue, workerid, FluencyData = NULL, RTStartData = NULL, RTEndData = NULL){
                        return(data.frame(cbind(workerid,
                                                "cue" = rep(cue, 3),
@@ -743,7 +916,7 @@ server <- function(input, output, session) {
                                                 "fair" = input$fair,
                                                 "interesting" = input$interesting,
                                                 "comments" = input$comments
-                                                #"interesting" = input$interesting
+                                                # "interesting" = input$interesting
                      )
                      
                                                    
@@ -752,7 +925,7 @@ server <- function(input, output, session) {
                      SemanticDatafileName <- paste0(input$workerid, as.integer(Sys.time()), digest::digest(SemanticData.i), "_fluency.csv")
                      SurveyDatafileName <- paste0(input$workerid, as.integer(Sys.time()), digest::digest(SurveyData.i), "_survey.csv")
                      
-                     # create filepath to dropbox folder
+                     # Create filepath to dropbox folder
 
                        SemanticDatafilePath <- file.path(tempdir(), SemanticDatafileName)
                        write.csv(SemanticData.i, SemanticDatafilePath, row.names = FALSE, quote = TRUE)
@@ -762,10 +935,12 @@ server <- function(input, output, session) {
                        write.csv(SurveyData.i, SurveyDatafilePath, row.names = FALSE, quote = TRUE)
                        rdrop2::drop_upload(SurveyDatafilePath, path = outputDir, dtoken = droptoken)
               
-                     # report progress (of data saving) to the user
+                     # Report progress (of data-saving) to the user
+                       
                      incProgress(.40)
                      
-                     # go to goodbye page
+                     # Go to goodbye page
+                     
                      CurrentValues$page <- "goodbye"
                      Sys.sleep(.25)
                      incProgress(1)
@@ -773,50 +948,55 @@ server <- function(input, output, session) {
   })
   
   # --------------------------------
-  # SECTION 3C: WHAT TO DO WHEN A KEY IS PRESSED ----
-  # http://www.javascripter.net/faq/keycodes.htm
+  # SECTION 3C: WHAT TO DO WHEN A KEY IS PRESSED (http://www.javascripter.net/faq/keycodes.htm)
   # --------------------------------
-  # upon observing a key event
+  
+  # Upon observing a key event
+  
   observeEvent(input$lastkeypresscode, {
-    # isolate keyboard event
+    # Isolate keyboard event
+    
     n <- input$lastkeypresscode[1]
     
-    # if we are on the welcome page
+    # If we are on the welcome page
+    
     if (CurrentValues$page == "welcome") {
-      if (n == 13) {   # if the enter key is pressed
-        CurrentValues$page <- "instructions1"   # go to the literature page
+      if (n == 13) { # If the enter key is pressed
+        CurrentValues$page <- "instructions1" # Go to the literature page
       }
     }
     
-    # if we are on a fluency task page
-    # we want to store an entry upon the user pressing enter
-    # and for each entry we want to register the time when the first key is pressed and the time when the enter key is pressed (i.e. when it is stored)
-    # this will allow us to compute both inter- and intra-item response times
+    # If we are on a fluency task page, we want to store an entry upon the user pressing enter, and for each entry, we want to register the time when the first key is pressed and the time when the enter key is pressed (i.e., when it is stored). This will allow us to compute both inter/intra-item response times
+    
     if (CurrentValues$page %in% navigator$InputID) {
       page <- CurrentValues$page
-      if (n == 13) {   # if the enter key is pressed
-        FluencyData[[page]] <- c(FluencyData[[page]], input[[CurrentValues$page]])   # update the fluency list
-        RTEndData[[page]] <- c(RTEndData[[page]], Sys.time())   # register the time the response was stored
-        if(!is.null(RTCurrentStartData[[page]])){   # if non-enter key presses have been registered
-          RTStartData[[page]] <- c(RTStartData[[page]], min(RTCurrentStartData[[page]]))   # select the minum time registered and store
+      if (n == 13) { # If the enter key is pressed
+        FluencyData[[page]] <- c(FluencyData[[page]], input[[CurrentValues$page]]) # Update the fluency list
+        RTEndData[[page]] <- c(RTEndData[[page]], Sys.time()) # Register the time the response was stored
+        if(!is.null(RTCurrentStartData[[page]])){ # If non-enter key presses have been registered
+          RTStartData[[page]] <- c(RTStartData[[page]], min(RTCurrentStartData[[page]])) # Select the minimum time registered and store
         }
-        RTCurrentStartData[[page]] <- c()   # reset the start time counter upon pressing enter
-        updateTextInput(session, CurrentValues$page, value = "")   # clear the text input box
+        RTCurrentStartData[[page]] <- c() # Reset the start time counter upon pressing enter
+        updateTextInput(session, CurrentValues$page, value = "") # Clear the text input box
       } 
-      # if either a number or letter key is pressed
+      
+      # If either a number or letter key is pressed
+      
       if(n %in% c(48:57,65:90)) {
-        # RTCurrentStartData keeps a time register for each key pressed
-        # it is reset once an entry is stored
+        # RTCurrentStartData keeps a time register for each key pressed. It is reset once an entry is stored
+        
         # RTStartData keeps a register of the minimum RTCurrentStartData for each entry
-        # the minimum corresponds to the time the first key was pressed for a given entry
-        RTCurrentStartData[[page]] <- c(RTCurrentStartData[[page]], Sys.time())   # register the time it is pressed
+        
+        # The minimum corresponds to the time the first key was pressed for a given entry
+        
+        RTCurrentStartData[[page]] <- c(RTCurrentStartData[[page]], Sys.time())   # Register the time it is pressed
       }
   }
   })
-  
 }
 
 #----------------------------
-# CREATE APP                 ---
+# CREATE APP
 #----------------------------
+
 shinyApp(ui = ui, server = server)

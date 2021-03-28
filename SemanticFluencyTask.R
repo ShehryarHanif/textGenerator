@@ -11,37 +11,54 @@ SemanticFluencyTask <- function(title = NULL, cue = NULL, InputID = NULL, nextIn
   
   return(list(
     br(),
+    
     span(h2(strong(title)), style="color:#2780e3"),
+    
     br(),
-    h3(strong(cue)),   # training cue word
-    textInput(inputId = InputID,   # control ID
-              label = "",   # label to appear on top of control (color conditioned above)
-              placeholder = "Click here to enter text"),  # text to appear as placeholder inside control
-    p(tags$small("Press enter to save entry.")), # reminder to press enter
+    
+    h3(strong(cue)), # Training cue word
+    
+    textInput(inputId = InputID, # Control ID
+              label = "", # Label to appear on top of control (color conditioned above)
+              placeholder = "Click here to enter text"), # Text to appear as placeholder inside control
+    
+    p(tags$small("Press enter to save entry.")), # Reminder to press "Enter"
+    
     HTML("<br>"),
-    # render words entered
+    
+    # Render words entered
+    
     renderText({
       paste0(rep(" - ", length(FluencyData[[InputID]])), FluencyData[[InputID]])
     }),
+    
     HTML("<br>","<br>"),
+    
     renderText({
       paste0("Number of unique words entered: ",  length(unique(FluencyData[[InputID]][trimws(FluencyData[[InputID]])!=""])))   # text user sees
     }),
+    
     renderText({
       paste0("Number of words required to satisfy minimum: ",  max(10 - length(unique(FluencyData[[InputID]][trimws(FluencyData[[InputID]])!=""])),0))   # text user sees
     }),
-    # render countdown clock
+    
+    # Render countdown clock
+    
     renderText({
-      invalidateLater(1000)   # specifies countdown to be in 1000 milliseconds (i.e. in seconds) 
+      invalidateLater(1000) # Specifies countdown to be in 1000 milliseconds (i.e., in seconds) 
       if(Sys.time() <= EventTime){
       paste("Time remaining:",  round(difftime(EventTime, Sys.time(), units = "secs")), "secs")}
-      else{"You have run out of time, you may proceed to close this window."}# text user sees
+      else{"You have run out of time, you may proceed to close this window."} # Text user sees
     }),
-    HTML("<br><br>"),   # vertical spacing
+    
+    HTML("<br><br>"), # Vertical spacing
+    
     instructions,
-    # action button to be pressed by user to continue
-    actionButton(inputId = nextInputID,   # button ID 
-                 label = "Next",   # button label (text displayed to the user) 
+    
+    # Action button to be pressed by user to continue
+    
+    actionButton(inputId = nextInputID, # Button ID 
+                 label = "Next", # Button label (text displayed to the user) 
                  class = "btn btn-primary action-button")
   ))
 }
