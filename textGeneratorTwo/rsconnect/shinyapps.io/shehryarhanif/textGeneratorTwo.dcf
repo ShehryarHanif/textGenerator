@@ -1,0 +1,12 @@
+name: textGeneratorTwo
+title: textGeneratorTwo
+username:
+account: shehryarhanif
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3907570
+bundleId: 4429627
+url: https://shehryarhanif.shinyapps.io/textGeneratorTwo/
+when: 1617531381.36816
+asMultiple: FALSE
+asStatic: FALSE

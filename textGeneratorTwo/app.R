@@ -15,7 +15,7 @@ library(rsconnect)
 # Load data and functions
 # --------------------------
 
-task_data <- readRDS("data/task_data.rds")
+task_data <- readRDS("data/task_data2.rds")
 training_data <- readRDS("data/training_data.rds")
 screening_data <- readRDS("data/screening_data.rds")
 source("SemanticFluencyTask.R", local = TRUE)
@@ -24,14 +24,14 @@ source("SemanticFluencyTask.R", local = TRUE)
 
 options(digits.secs = 6)
 time <- 3
-compensation <- "3.00"
+compensation <- "3.50"
 min_words <- 10
 
 # --------------------------
 # Data saving
 # --------------------------
 
-outputDir <- "turingTest/textStuff"  # Directory to save data
+outputDir <- "turingTest/textGeneratorTwo"  # Directory to save data
 droptoken <- readRDS("token.rds") # Reads in authentication for Dropbox (must be stored in same folder as this code)
 
 # Check out https://github.com/karthik/rdrop2 to see how to generate your authentication tokens and link to your dropbox
@@ -202,7 +202,7 @@ server <- function(input, output, session) {
             p(span(strong("Length:"), style="color:#2780e3"), "task takes on average 15 to 20 minutes to complete."),
             p(span(strong("Compensation:"), style="color:#2780e3"), paste0("$", compensation)),
             br(),
-            p("If you consent to participate in this study, please enter your MTurk ID and press ''Start''.")),
+            p("This is an academic research project to understand words and their contexts. If you consent to participate in this study, please enter your MTurk ID and press ''Start''.")),
           
           # Main panel contents
           
@@ -429,7 +429,7 @@ server <- function(input, output, session) {
           
           br(),
           
-          p(strong("We are especially interested in context words likely to appear in",  span("political discourse.", style="color: #ff0000"))),
+          p(strong("We are especially interested in context words likely to appear in",  span("legal and courtroom settings.", style="color: #ff0000"))),
           
           br(),
           
@@ -578,94 +578,104 @@ server <- function(input, output, session) {
     if (CurrentValues$page == "survey") {
       
       # Throw an error if not all question have been answered.
-      
-      if (CurrentValues$errors == "answerQuestions") {
-        answerQuestions <- p(style = "color:Red", "Please answer all required questions!")
-      } else {
-        answerQuestions <- ""
-      }
+
+      # if (CurrentValues$errors == "answerQuestions") {
+      #   answerQuestions <- p(style = "color:Red", "Please answer all required questions!")
+      # } else {
+      #   answerQuestions <- ""
+      # }
       
       return(list(
-        br(),
-        span(h2(strong("Survey (1 of 1)")), style="color:#2780e3"),
-        
-        br(),
-        
-        p("To conclude please fill out this short survey."),
-        
-        br(),
-        
-        radioButtons("party", 
-                     label = "Generally speaking, do you usually think of yourself as a Democrat, a Republican, an Independent, or what?",
-                     choices = c("Strong Democrat" =  1,
-                                 "Weak Democrat" = 2,
-                                 "Independent Democrat" = 3,
-                                 "Independent Independent" = 4,
-                                 "Independent Republican" = 5,
-                                 "Weak Republican" = 6,
-                                 "Strong Republican" = 7,
-                                 "Other party" = 8,
-                                 "No preference" = 9
-                     ), selected = 99, width = "100%"),
-        
-        br(),
-        
-        radioButtons("ideology", 
-                     label = "Generally speaking, do you usually think of yourself as a Liberal, a Conservative, a Moderate, or what?",
-                     choices = c("Extremely liberal" =  1,
-                                 "Liberal" = 2,
-                                 "Slightly liberal" = 3,
-                                 "Moderate; middle of the road" = 4,
-                                 "Slightly conservative" = 5,
-                                 "Conservative" = 6,
-                                 "Extremely conservative" = 7,
-                                 "Haven't thought much about this" = 8
-                     ), selected = 99, width = "100%"),
-        
-        br(),
-        
-        radioButtons("sex",
-                     label = "What is your sex?",
-                     choices = list("Male" = 1, "Female" = 2, "Other" = 3),
-                     selected = 99, width = "100%"),
-        
-        br(),
-        
-        radioButtons("interesting", 
-                     label = "How engaging did you find the HIT?",
-                     choices = c("1 - Not at all engaging" =  1,
-                                 "2" = 2,
-                                 "3" = 3,
-                                 "4" = 4,
-                                 "5 - Very engaging" = 5
-                     ), selected = 99, width = "100%"),
-        
-        br(),
-        
-        radioButtons("fair", 
-                     label = paste0("How fair would you say $", compensation, " is as compensation for this HIT?"),
-                     choices = c("1 - Very unfair" =  1,
-                                 "2" = 2,
-                                 "3" = 3,
-                                 "4" = 4,
-                                 "5 - More than fair" = 5
-                     ), selected = 99, width = "100%"),
-        
-        br(),
-        
-        textAreaInput("comments",
-                      label = "If you have any additional comments (e.g. that can help us improve the task), please enter them below."),
-        
-        br(),
-        
-        p(answerQuestions),
+        p("You have now completed the survey's main tasks. Press the button to continue."),
         
         actionButton(inputId = "savedata",
-                     label = "Next", 
+                     label = "Continue", 
                      class = "btn btn-primary action-button"),
         
         HTML("<br><br><br>"))
       )
+      
+      # return(list(
+      #   br(),
+      #   span(h2(strong("Survey (1 of 1)")), style="color:#2780e3"),
+      #   
+      #   br(),
+      #   
+      #   p("To conclude please fill out this short survey."),
+      #   
+      #   br(),
+      #   
+      #   radioButtons("party", 
+      #                label = "Generally speaking, do you usually think of yourself as a Democrat, a Republican, an Independent, or what?",
+      #                choices = c("Strong Democrat" =  1,
+      #                            "Weak Democrat" = 2,
+      #                            "Independent Democrat" = 3,
+      #                            "Independent Independent" = 4,
+      #                            "Independent Republican" = 5,
+      #                            "Weak Republican" = 6,
+      #                            "Strong Republican" = 7,
+      #                            "Other party" = 8,
+      #                            "No preference" = 9
+      #                ), selected = 99, width = "100%"),
+      #   
+      #   br(),
+      #   
+      #   radioButtons("ideology", 
+      #                label = "Generally speaking, do you usually think of yourself as a Liberal, a Conservative, a Moderate, or what?",
+      #                choices = c("Extremely liberal" =  1,
+      #                            "Liberal" = 2,
+      #                            "Slightly liberal" = 3,
+      #                            "Moderate; middle of the road" = 4,
+      #                            "Slightly conservative" = 5,
+      #                            "Conservative" = 6,
+      #                            "Extremely conservative" = 7,
+      #                            "Haven't thought much about this" = 8
+      #                ), selected = 99, width = "100%"),
+      #   
+      #   br(),
+      #   
+      #   radioButtons("sex",
+      #                label = "What is your sex?",
+      #                choices = list("Male" = 1, "Female" = 2, "Other" = 3),
+      #                selected = 99, width = "100%"),
+      #   
+      #   br(),
+      #   
+      #   radioButtons("interesting", 
+      #                label = "How engaging did you find the HIT?",
+      #                choices = c("1 - Not at all engaging" =  1,
+      #                            "2" = 2,
+      #                            "3" = 3,
+      #                            "4" = 4,
+      #                            "5 - Very engaging" = 5
+      #                ), selected = 99, width = "100%"),
+      #   
+      #   br(),
+      #   
+      #   radioButtons("fair", 
+      #                label = paste0("How fair would you say $", compensation, " is as compensation for this HIT?"),
+      #                choices = c("1 - Very unfair" =  1,
+      #                            "2" = 2,
+      #                            "3" = 3,
+      #                            "4" = 4,
+      #                            "5 - More than fair" = 5
+      #                ), selected = 99, width = "100%"),
+      #   
+      #   br(),
+      #   
+      #   textAreaInput("comments",
+      #                 label = "If you have any additional comments (e.g. that can help us improve the task), please enter them below."),
+      #   
+      #   br(),
+      #   
+      #   p(answerQuestions),
+      #   
+      #   actionButton(inputId = "savedata",
+      #                label = "Next", 
+      #                class = "btn btn-primary action-button"),
+      #   
+      #   HTML("<br><br><br>"))
+      # )
     }
     
     # --------------------------------
@@ -860,14 +870,18 @@ server <- function(input, output, session) {
   
   # Survey
   
+  # observeEvent(input$savedata, {
+  #   # Check whether all questions have been answered
+  #   
+  #   if (any(input$age == 0, is.null(input$sex), is.null(input$party), is.null(input$ideology), is.null(input$fair), is.null(input$interesting))) {
+  #     CurrentValues$errors <- "answerQuestions"
+  #   } else {
+  #     CurrentValues$page <- "savedata"
+  #   }})
+  
   observeEvent(input$savedata, {
-    # Check whether all questions have been answered
-    
-    if (any(input$age == 0, is.null(input$sex), is.null(input$party), is.null(input$ideology), is.null(input$fair), is.null(input$interesting))) {
-      CurrentValues$errors <- "answerQuestions"
-    } else {
       CurrentValues$page <- "savedata"
-    }})
+      })
   
   # Other
   
@@ -909,21 +923,21 @@ server <- function(input, output, session) {
                      SemanticData.i <- bind_rows(SemanticData.i)
                      
                      # Write survey data to a datatable
-                     SurveyData.i <- data.table("workerid" = input$workerid,
-                                                "sex" = input$sex,
-                                                "party" = input$party,
-                                                "ideology" = input$ideology,
-                                                "fair" = input$fair,
-                                                "interesting" = input$interesting,
-                                                "comments" = input$comments
-                                                # "interesting" = input$interesting
-                     )
-                     
+                     # SurveyData.i <- data.table("workerid" = input$workerid,
+                     #                            "sex" = input$sex,
+                     #                            "party" = input$party,
+                     #                            "ideology" = input$ideology,
+                     #                            "fair" = input$fair,
+                     #                            "interesting" = input$interesting,
+                     #                            "comments" = input$comments
+                     #                            # "interesting" = input$interesting
+                     # )
+                     # 
                                                    
                      incProgress(.5)
                      
                      SemanticDatafileName <- paste0(input$workerid, as.integer(Sys.time()), digest::digest(SemanticData.i), "_fluency.csv")
-                     SurveyDatafileName <- paste0(input$workerid, as.integer(Sys.time()), digest::digest(SurveyData.i), "_survey.csv")
+                     # SurveyDatafileName <- paste0(input$workerid, as.integer(Sys.time()), digest::digest(SurveyData.i), "_survey.csv")
                      
                      # Create filepath to dropbox folder
 
@@ -931,9 +945,9 @@ server <- function(input, output, session) {
                        write.csv(SemanticData.i, SemanticDatafilePath, row.names = FALSE, quote = TRUE)
                        rdrop2::drop_upload(SemanticDatafilePath, path = outputDir, dtoken = droptoken)
                        
-                       SurveyDatafilePath <- file.path(tempdir(), SurveyDatafileName)
-                       write.csv(SurveyData.i, SurveyDatafilePath, row.names = FALSE, quote = TRUE)
-                       rdrop2::drop_upload(SurveyDatafilePath, path = outputDir, dtoken = droptoken)
+                       # SurveyDatafilePath <- file.path(tempdir(), SurveyDatafileName)
+                       # write.csv(SurveyData.i, SurveyDatafilePath, row.names = FALSE, quote = TRUE)
+                       # rdrop2::drop_upload(SurveyDatafilePath, path = outputDir, dtoken = droptoken)
               
                      # Report progress (of data-saving) to the user
                        
