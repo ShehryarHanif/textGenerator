@@ -249,14 +249,14 @@ server <- function(input, output, session) {
           column(12,
                  wellPanel(
           tags$ul(
-            tags$li("Tend to occur in the vicinity of the CUE WORD. That is, they are words that appear close to the CUE WORD in written or spoken language.")),
+            tags$li("Tend to occur near the CUE WORD. That is, they are words that appear close to the CUE WORD in written or spoken language.")),
             p("AND/OR", align = "center"),
           tags$ul(
             tags$li("Tend to occur in similar situations to the CUE WORD in spoken and written language. That is, they are words that regularly appear with other words that are closely related to the CUE WORD.")))),
           br(),
           p("For example, CONTEXT WORDS for the cue word COFFEE include:"),
           tags$ol(
-            tags$li(em("cup"), "(tends to occur in the vicinity of COFFEE)."), 
+            tags$li(em("cup"), "(tends to occur near COFFEE)."), 
             tags$li(em("tea"), "(tends to occur in similar situations to COFFEE, for example when discussing drinks).")
           ),
           

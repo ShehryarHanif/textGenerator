@@ -5,8 +5,8 @@ account: shehryarhanif
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3907570
-bundleId: 4429627
+bundleId: 4433157
 url: https://shehryarhanif.shinyapps.io/textGeneratorTwo/
-when: 1617531381.36816
+when: 1617627284.34491
 asMultiple: FALSE
 asStatic: FALSE
